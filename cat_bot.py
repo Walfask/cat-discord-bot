@@ -29,9 +29,10 @@ async def on_message(message):
         and str(message.author.id) == USER_ID
         and message.attachments
     ):
-        image_url = message.attachments[0].url
+        image_content = message.content
         image_name = message.attachments[0].filename
-        image = Image(image_name, image_url)
+        image_url = message.attachments[0].url
+        image = Image(image_content, image_name, image_url)
 
         channels = await get_channels()
 
@@ -40,14 +41,19 @@ async def on_message(message):
 
 
 async def get_channels():
-    return [channel for channel in client.get_all_channels() if "cute-animals" in channel.name]
+    channel_names = ["cute-animals", "pics-and-stuff"]
+    return [
+        channel
+        for channel in client.get_all_channels()
+        if any(channel_name in channel.name for channel_name in channel_names)
+    ]
 
 
-async def send_image(channel, image: Image):
+async def send_image(channel, image):
     async with aiohttp.ClientSession() as session:
         async with session.get(image.url) as response:
             data = io.BytesIO(await response.read())
-            await channel.send(file=discord.File(data, image.filename))
+            await channel.send(content=image.content, file=discord.File(data, image.filename))
 
 
 client.run(TOKEN)

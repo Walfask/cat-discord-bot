@@ -1,7 +1,5 @@
 class Image:
-    filename: str
-    url: str
-
-    def __init__(self, filename: str, url: str) -> None:
+    def __init__(self, content: str, filename: str, url: str) -> None:
+        self.content = content
         self.filename = filename
         self.url = url
