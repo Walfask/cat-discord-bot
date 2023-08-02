@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-discord = "^1.7.3"
+discord-py = "1.7.3"
 python-dotenv = "^0.20.0"
 aiocron = "^1.8"
 
