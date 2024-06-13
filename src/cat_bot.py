@@ -14,7 +14,7 @@ TOKEN = os.getenv("TOKEN")
 SERVER_ID = os.getenv("SERVER_ID")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
 USER_ID = os.getenv("USER_ID")
-DIR_PATH = os.getenv("DIR_PATH")
+DIR_PATH = os.path.abspath('.')
 
 client = discord.Client()
 
