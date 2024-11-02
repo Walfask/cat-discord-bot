@@ -1,22 +1,29 @@
-[tool.poetry]
+[project]
 name = "cat-discord-bot"
-version = "0.2.1"
+version = "0.3.0"
 description = ""
-authors = ["Walfask"]
+authors = [{name = "Walfask"}]
 license = "MIT"
 
-[tool.poetry.dependencies]
-python = "^3.9"
-discord-py = "1.7.3"
-python-dotenv = "^0.20.0"
-aiocron = "^1.8"
+dependencies = [
+    "aiohttp==3.10.10",
+    "audioop-lts==0.2.1",
+    "discord-py==2.3.2",
+    "python-dotenv==1.0.1",
+]
+requires-python = ">=3.13"
 
-[tool.poetry.dev-dependencies]
-black = "^22.6.0"
-isort = "^5.10.1"
-pre-commit = "^2.20.0"
-flake8 = "^4.0.1"
+[project.optional-dependencies]
+dev = [
+    "pre-commit==4.0.1",
+    "ruff==0.7.2",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+select = ["F", "E", "W", "I001"]
+line-length = 120
+fixable = ["ALL"]

@@ -1,9 +1,10 @@
+import datetime
 import io
 import os
 
-import aiocron
 import aiohttp
 import discord
+from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 from database import Database
@@ -16,7 +17,9 @@ CHANNEL_ID = os.getenv("CHANNEL_ID")
 USER_ID = os.getenv("USER_ID")
 DIR_PATH = os.path.abspath('.')
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.message_content = True
+client = discord.Client(intents=intents)
 
 
 @client.event
@@ -24,6 +27,7 @@ async def on_ready():
     print(f"Logged on as {client.user}")
     client.channels = await get_channels()
     client.database = Database(f"{DIR_PATH}/db/cat.db")
+    client.daily_pic = DailyPic()
 
 
 @client.event
@@ -46,7 +50,7 @@ async def on_message(message):
             await send_image_from_db()
 
         if message.content == "!ping":
-            await message.channel.send(content="pong!")
+            await message.channel.send(content=f"pong! ({datetime.datetime.now()})")
 
 
 
@@ -74,9 +78,16 @@ async def send_image_from_db():
         await channel.send(file=discord.File(f"{DIR_PATH}/images/{file_name}"))
 
 
-@aiocron.crontab("0 9 * * *")
-async def cron_send_pic():
-    await send_image_from_db()
+class DailyPic(commands.Cog):
+    def __init__(self):
+        self.cron_send_pic.start()
+
+    def cog_unload(self):
+        self.my_task.cancel()
+
+    @tasks.loop(time=datetime.time(hour=9))
+    async def cron_send_pic(self):
+        await send_image_from_db()
 
 
 client.run(TOKEN)
