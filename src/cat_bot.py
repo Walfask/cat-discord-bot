@@ -4,6 +4,7 @@ import os
 
 import aiohttp
 import discord
+from dateutil import tz
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
@@ -20,7 +21,7 @@ DIR_PATH = os.path.abspath('.')
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
-
+time = datetime.time(hour=9, tzinfo=tz.gettz("US/Eastern"))
 
 @client.event
 async def on_ready():
@@ -50,7 +51,7 @@ async def on_message(message):
             await send_image_from_db()
 
         if message.content == "!ping":
-            await message.channel.send(content=f"pong! ({datetime.datetime.now()})")
+            await message.channel.send(content=f"pong! ({datetime.datetime.now(tz=tz.gettz('US/Eastern'))})")
 
 
 
@@ -85,7 +86,7 @@ class DailyPic(commands.Cog):
     def cog_unload(self):
         self.my_task.cancel()
 
-    @tasks.loop(time=datetime.time(hour=9))
+    @tasks.loop(time=time)
     async def cron_send_pic(self):
         await send_image_from_db()
 
