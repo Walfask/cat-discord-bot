@@ -13,9 +13,10 @@ from image import Image
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
-SERVER_ID = os.getenv("SERVER_ID")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
-USER_ID = os.getenv("USER_ID")
+MAIN_SERVER_ID = os.getenv("MAIN_SERVER_ID")
+MAIN_CHANNEL_ID = os.getenv("MAIN_CHANNEL_ID")
+MAIN_USER_ID = os.getenv("MAIN_USER_ID")
+CHANNEL_IDS = os.getenv("CHANNEL_IDS")
 DIR_PATH = os.path.abspath('.')
 
 intents = discord.Intents.default()
@@ -34,9 +35,9 @@ async def on_ready():
 @client.event
 async def on_message(message):
     if (
-        str(message.guild.id) == SERVER_ID
-        and str(message.channel.id) == CHANNEL_ID
-        and str(message.author.id) == USER_ID
+        str(message.guild.id) == MAIN_SERVER_ID
+        and str(message.channel.id) == MAIN_CHANNEL_ID
+        and str(message.author.id) == MAIN_USER_ID
     ):
         if message.attachments:
             image_content = message.content
@@ -51,17 +52,17 @@ async def on_message(message):
             await send_image_from_db()
 
         if message.content == "!ping":
-            await message.channel.send(content=f"pong! ({datetime.datetime.now(tz=tz.gettz('US/Eastern'))})")
-
+            channel = client.get_channel(int(MAIN_CHANNEL_ID))
+            await send_ping_response(channel)
 
 
 async def get_channels():
-    channel_names = ["cute-animals", "pics-and-stuff"]
-    return [
-        channel
-        for channel in client.get_all_channels()
-        if any(channel_name in channel.name for channel_name in channel_names)
-    ]
+    channel_ids = [int(id.strip()) for id in CHANNEL_IDS.split(',')]
+    return [client.get_channel(int(id)) for id in channel_ids]
+
+
+async def send_ping_response(channel):
+    await channel.send(content=f"pong! ({datetime.datetime.now(tz=tz.gettz('US/Eastern'))})")
 
 
 async def send_image(channel, image):
@@ -88,6 +89,8 @@ class DailyPic(commands.Cog):
 
     @tasks.loop(time=time)
     async def cron_send_pic(self):
+        channel = client.get_channel(int(MAIN_CHANNEL_ID))
+        await send_ping_response(channel)
         await send_image_from_db()
 
 
