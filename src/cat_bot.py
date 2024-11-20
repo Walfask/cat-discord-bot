@@ -12,6 +12,7 @@ from database import Database
 from image import Image
 
 load_dotenv()
+DEBUG = os.getenv("DEBUG", False)
 TOKEN = os.getenv("TOKEN")
 MAIN_SERVER_ID = os.getenv("MAIN_SERVER_ID")
 MAIN_CHANNEL_ID = os.getenv("MAIN_CHANNEL_ID")
@@ -89,9 +90,11 @@ class DailyPic(commands.Cog):
 
     @tasks.loop(time=time)
     async def cron_send_pic(self):
-        channel = client.get_channel(int(MAIN_CHANNEL_ID))
-        await send_ping_response(channel)
         await send_image_from_db()
+
+        if DEBUG:
+            channel = client.get_channel(int(MAIN_CHANNEL_ID))
+            await send_ping_response(channel)
 
 
 client.run(TOKEN)
