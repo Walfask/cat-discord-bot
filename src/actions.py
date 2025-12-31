@@ -1,4 +1,6 @@
 import io
+import random
+import shutil
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -30,23 +32,37 @@ async def handle_message(client, message):
                 await _send_image(channel, image)
 
         if message.content == "!pic":
-            await send_image_from_db(client)
+            await send_random_image(client)
 
         if message.content == "!ping":
             channel = client.get_channel(int(config.MAIN_CHANNEL_ID))
-            await _send_ping_response(channel)
+            await channel.send(content=f"pong! ({datetime.now(tz=ZoneInfo('America/New_York'))})")
 
 
-async def send_image_from_db(client):
-    id = client.database.get_counter()
-    file_name = client.database.get_picture_file(id)
+async def send_random_image(client):
+    image_path = _get_random_pending_image()
+
+    if image_path is None:
+        channel = client.get_channel(int(config.MAIN_CHANNEL_ID))
+        await channel.send(content="No more images left to send!")
+        return
 
     for channel in client.channels:
-        await channel.send(file=discord.File(f"{config.DIR_PATH}/images/{file_name}"))
+        await channel.send(file=discord.File(image_path))
+
+    _move_image_to_sent(image_path)
 
 
-async def _send_ping_response(channel):
-    await channel.send(content=f"pong! ({datetime.now(tz=ZoneInfo('America/New_York'))})")
+def _get_random_pending_image():
+    files = [f for f in config.PENDING_DIR.iterdir() if f.is_file()]
+    if not files:
+        return None
+    return random.choice(files)
+
+
+def _move_image_to_sent(image_path):
+    config.SENT_DIR.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(image_path), config.SENT_DIR / image_path.name)
 
 
 async def _send_image(channel, image):
