@@ -12,7 +12,7 @@ client = discord.Client(intents=intents)
 @client.event
 async def on_ready():
     print(f"Logged on as {client.user}")
-    client.channels = await get_channels(client)
+    client.target_channels = get_channels(client)
 
     setup_cron(client)
 

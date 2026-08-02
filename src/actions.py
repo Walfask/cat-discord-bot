@@ -11,9 +11,9 @@ import config
 from image import Image
 
 
-async def get_channels(client):
-    channel_ids = [int(id.strip()) for id in config.CHANNEL_IDS.split(',')]
-    return [client.get_channel(int(id)) for id in channel_ids]
+def get_channels(client):
+    channel_ids = [int(channel_id.strip()) for channel_id in config.CHANNEL_IDS.split(",")]
+    return [client.get_channel(channel_id) for channel_id in channel_ids]
 
 
 async def handle_message(client, message):
@@ -28,7 +28,7 @@ async def handle_message(client, message):
             image_url = message.attachments[0].url
             image = Image(image_content, image_name, image_url)
 
-            for channel in client.channels:
+            for channel in client.target_channels:
                 await _send_image(channel, image)
 
         if message.content == "!pic":
@@ -40,24 +40,27 @@ async def handle_message(client, message):
 
 
 async def send_random_image(client):
-    image_path = _get_random_pending_image()
+    image_path, file_count = _get_random_pending_image()
+    main_channel = client.get_channel(int(config.MAIN_CHANNEL_ID))
 
     if image_path is None:
-        channel = client.get_channel(int(config.MAIN_CHANNEL_ID))
-        await channel.send(content="No more images left to send!")
+        await main_channel.send("No images found!")
         return
 
-    for channel in client.channels:
+    for channel in client.target_channels:
         await channel.send(file=discord.File(image_path))
 
     _move_image_to_sent(image_path)
+
+    if file_count <= 1:
+        await main_channel.send("No more images left to send!")
 
 
 def _get_random_pending_image():
     files = [f for f in config.PENDING_DIR.iterdir() if f.is_file()]
     if not files:
-        return None
-    return random.choice(files)
+        return None, 0
+    return random.choice(files), len(files)
 
 
 def _move_image_to_sent(image_path):
