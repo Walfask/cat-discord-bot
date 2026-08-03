@@ -38,6 +38,11 @@ async def handle_message(client, message):
             channel = client.get_channel(int(config.MAIN_CHANNEL_ID))
             await channel.send(content=f"pong! ({datetime.now(tz=ZoneInfo('America/New_York'))})")
 
+        if message.content == "!count":
+            channel = client.get_channel(int(config.MAIN_CHANNEL_ID))
+            count = _get_pending_image_count()
+            await channel.send(f"{count} images remaining.")
+
 
 async def send_random_image(client):
     image_path, file_count = _get_random_pending_image()
@@ -66,6 +71,10 @@ def _get_random_pending_image():
 def _move_image_to_sent(image_path):
     config.SENT_DIR.mkdir(parents=True, exist_ok=True)
     shutil.move(str(image_path), config.SENT_DIR / image_path.name)
+
+
+def _get_pending_image_count():
+    return sum(1 for f in config.PENDING_DIR.iterdir() if f.is_file())
 
 
 async def _send_image(channel, image):
